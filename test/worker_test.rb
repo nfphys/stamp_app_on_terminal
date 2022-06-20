@@ -9,24 +9,28 @@ class TestWorker < Minitest::Test
     assert worker.started_work_at.nil?
     assert worker.finished_work_at.nil?
     refute worker.working?
+    assert_equal '出勤前', worker.status
     
     # 勤務開始
     worker = worker.start_work 
     assert worker.started_work_at.instance_of?(Time)
     assert worker.finished_work_at.nil?
     assert worker.working?
+    assert_equal '勤務中', worker.status
 
     # 勤務終了
     worker = worker.finish_work
     assert worker.started_work_at.instance_of?(Time)
     assert worker.finished_work_at.instance_of?(Time)
     refute worker.working?
+    assert_equal '退勤済', worker.status
 
     # リセット
     worker = worker.reset 
     assert worker.started_work_at.nil?
     assert worker.finished_work_at.nil?
     refute worker.working?
+    assert_equal '出勤前', worker.status
   end
 
   def test_working_hours

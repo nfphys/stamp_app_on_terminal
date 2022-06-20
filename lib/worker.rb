@@ -71,6 +71,18 @@ class Worker
     finished_work_at.nil?
   end
 
+  def status 
+    if started_work_at.nil?
+      return "出勤前"
+    end
+
+    if finished_work_at.nil?
+      return "勤務中"
+    end
+
+    "退勤済"
+  end
+
   def reset 
     Worker.new(id, name)
   end
