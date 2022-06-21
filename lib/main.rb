@@ -10,7 +10,6 @@ begin
 
   win.setpos(0, 0)
   win.addstr("名前を入力してください\n")
-  win.refresh
   win.addstr("名前: ")
   name = win.getstr
 
@@ -45,9 +44,25 @@ begin
         operation_number = win.getch.to_i 
         case operation_number 
         when 1
+          if worker.finished_work_at 
+            log = "既に退勤しています"
+            break 
+          end
+          if worker.started_work_at 
+            log = "既に出勤しています"
+            break 
+          end
           worker = worker.start_work 
           log = "出勤しました"
         when 2 
+          if worker.started_work_at.nil?
+            log = "まだ出勤していません"
+            break 
+          end
+          if worker.finished_work_at 
+            log = "既に退勤しています"
+            break 
+          end
           worker = worker.finish_work 
           log = "退勤しました"
         when 3 
