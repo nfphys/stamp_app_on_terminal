@@ -1,43 +1,66 @@
+require 'curses'
 require 'timeout'
 require_relative './worker.rb'
 
-id = 0
+Curses.init_screen 
+Curses.curs_set(0)
 
-puts "名前を入力してください:"
-print "名前:"
-name = gets.chomp
-printf "\n"
+begin 
+  win = Curses.stdscr
 
-worker = Worker.new(id, name)
+  win.setpos(0, 0)
+  win.addstr("名前を入力してください\n")
+  win.refresh
+  win.addstr("名前: ")
+  name = win.getstr
 
-loop do
-  printf "勤務状況:#{worker.status}\n"
-  printf "勤務時間:#{worker.working_hours}\n"
-  printf "勤務開始時刻:#{worker.started_work_at}\n"
-  printf "勤務終了時刻:#{worker.finished_work_at}\n"
-  printf "\n"
-  printf "数字を入力してください:\n"
-  printf "1. 出勤\n"
-  printf "2. 退勤\n"
-  printf "3. リセット\n"
-  printf "\n"
+  worker = Worker.new(0, name)
+  
+  log = ""
 
-  t = 1
-  begin 
-    Timeout.timeout(t) do 
-      n = gets.to_i 
-      case n 
-      when 1
-        worker = worker.start_work 
-      when 2 
-        worker = worker.finish_work 
-      when 3
-        worker = worker.reset
+  loop do 
+    win.clear
+    win.setpos(0, 0)
+    win.addstr(<<~TEXT
+    ようこそ、#{name}さん
+
+    勤務状況: #{worker.status}
+    勤務時間: #{worker.working_hours}
+    勤務開始時刻: #{worker.started_work_at}
+    勤務終了時刻: #{worker.finished_work_at}
+
+    以下の数字を入力してください: 
+    1. 出勤
+    2. 退勤
+    3. リセット
+    4. 終了
+
+    [LOG] #{log}
+    TEXT
+    )
+    win.refresh # refresh わからん...
+
+    begin 
+      Timeout.timeout(0.1) do
+        operation_number = win.getch.to_i 
+        case operation_number 
+        when 1
+          worker = worker.start_work 
+          log = "出勤しました"
+        when 2 
+          worker = worker.finish_work 
+          log = "退勤しました"
+        when 3 
+          worker = worker.reset 
+          log = "リセットしました"
+        when 4 
+          Curses.close_screen
+          exit
+        end
       end
-      printf "\e[11A\r"
+    rescue
     end
-  rescue Timeout::Error 
-    printf "\e[10A\r"
   end
+rescue
+  Curses.close_screen
 end
-
