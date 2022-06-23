@@ -79,8 +79,7 @@ begin
     以下の数字を入力してください: 
     1. 出勤
     2. 退勤
-    3. リセット
-    4. 終了
+    3. 終了
 
     [LOG] #{log}
     TEXT
@@ -136,17 +135,6 @@ begin
           )
 
         when 3 
-          client.query(
-            <<~TEXT
-            DELETE FROM work_data
-            WHERE started_work_at = '#{worker.started_work_at.to_s.scan(datetime_regexp).first}'
-            TEXT
-          )
-
-          worker = worker.reset 
-          log = "リセットしました"
-
-        when 4 
           Curses.close_screen
           exit
 
