@@ -165,6 +165,7 @@ class Worker
       return self 
     end
     
+    finished_work_at = Time.now
     Worker.new(id, name, started_work_at, finished_work_at)
   end
 
