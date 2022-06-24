@@ -167,7 +167,6 @@ class TestWorker < Minitest::Test
 
   def test_start_work 
     worker = Worker.new(0, 'foo')
-    assert_equal '出勤前', worker.status 
 
     worker = worker.start_work
     assert_equal '勤務中', worker.status
@@ -175,13 +174,29 @@ class TestWorker < Minitest::Test
 
   def test_finish_work 
     worker = Worker.new(0, 'foo')
-    assert_equal '出勤前', worker.status 
 
     worker = worker.finish_work 
     assert_equal '出勤前', worker.status 
 
     worker = worker.start_work 
     worker = worker.finish_work 
+    assert_equal '退勤済', worker.status
+  end
+
+  def test_start_break 
+    worker = Worker.new(0, 'foo')
+
+    worker = worker.start_break
+    assert_equal '出勤前', worker.status 
+
+    worker = worker.start_work
+    worker = worker.start_break 
+    assert_equal '休憩中', worker.status 
+
+    worker = worker.finish_work 
+    assert_equal '退勤済', worker.status
+
+    worker = worker.start_break 
     assert_equal '退勤済', worker.status
   end
 
