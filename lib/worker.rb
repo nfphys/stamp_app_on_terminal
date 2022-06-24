@@ -169,16 +169,6 @@ class Worker
     Worker.new(id, name, started_work_at, finished_work_at)
   end
 
-  def working?
-    return false if started_work_at.nil?
-    finished_work_at.nil?
-  end
-
-
-  def reset 
-    Worker.new(id, name)
-  end
-
   def working_hours 
     if started_work_at.nil?
       return Timer.create_from_sec(0)
