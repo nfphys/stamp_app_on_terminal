@@ -219,26 +219,6 @@ class TestWorker < Minitest::Test
     assert_equal '退勤済', worker.status 
   end
 
-  def test_start_to_finish
-    # workerを作成
-    worker = Worker.new(0, 'foo')
-    assert worker.started_work_at.nil?
-    assert worker.finished_work_at.nil?
-    assert_equal '出勤前', worker.status
-    
-    # 勤務開始
-    worker = worker.start_work 
-    assert worker.started_work_at.instance_of?(Time)
-    assert worker.finished_work_at.nil?
-    assert_equal '勤務中', worker.status
-
-    # 勤務終了
-    worker = worker.finish_work
-    assert worker.started_work_at.instance_of?(Time)
-    assert worker.finished_work_at.instance_of?(Time)
-    assert_equal '退勤済', worker.status
-  end
-
   def test_working_hours
     started_work_at  = Time.local(2021,  5, 20,  0, 33, 45, 0)
     finished_work_at = Time.local(2021,  5, 20,  0, 33, 52, 0)
