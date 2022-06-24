@@ -169,7 +169,6 @@ class Worker
     finished_work_at = now
 
     if status == "休憩中"
-      puts 1
       finished_break_at = @finished_break_at + [now]
       return Worker.new(
         id, name, started_work_at, finished_work_at, 
@@ -185,8 +184,20 @@ class Worker
       return self 
     end
 
-    p started_break_at = @started_break_at + [Time.now]
+    started_break_at = @started_break_at + [Time.now]
     Worker.new(id, name, started_work_at, finished_work_at, started_break_at)
+  end
+
+  def finish_break 
+    if status != "休憩中"
+      return self 
+    end
+
+    finished_break_at = @finished_break_at + [Time.now]
+    Worker.new(
+      id, name, started_work_at, finished_work_at, 
+      started_break_at, finished_break_at
+    )
   end
 
   def working_hours 
