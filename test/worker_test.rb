@@ -3,6 +3,58 @@ require 'minitest/autorun'
 require_relative '../lib/worker.rb'
 
 class TestWorker < Minitest::Test 
+  def test_check_id 
+    e = assert_raises TypeError do 
+      Worker.new('1', 'foo')
+    end
+    assert_equal 'id must be an integer.', e.message
+
+    e = assert_raises TypeError do 
+      Worker.new(1.0, 'foo')
+    end
+    assert_equal 'id must be an integer.', e.message
+
+    e = assert_raises RangeError do 
+      Worker.new(-1, 'foo')
+    end
+    assert_equal 'id must be non-negative.', e.message
+  end
+
+  def test_check_name
+    e = assert_raises TypeError do 
+      Worker.new(1, 100)
+    end
+    assert_equal 'name must be a string.', e.message
+
+    e = assert_raises TypeError do 
+      Worker.new(1, Date.today)
+    end
+    assert_equal 'name must be a string.', e.message
+  end
+
+  def test_check_work_time 
+    now = Time.now
+    e = assert_raises TypeError do 
+      Worker.new(0, 'foo', 100)
+    end
+    assert_equal 'started_work_at must be nil or an instance of Time.', e.message
+
+    e = assert_raises TypeError do 
+      Worker.new(0, 'foo', now, 100)
+    end
+    assert_equal 'finished_work_at must be nil or an instance of Time.', e.message
+
+    e = assert_raises ArgumentError do 
+      Worker.new(0, 'foo', nil, now)
+    end
+    assert_equal 'finished_work_at must be nil when started_work_at is nil.', e.message 
+
+    e = assert_raises ArgumentError do 
+      Worker.new(0, 'foo', now, now - 100)
+    end
+    assert_equal 'started_work_at must be before finished_work_at.', e.message
+  end
+
   def test_start_to_finish
     # workerを作成
     worker = Worker.new(0, 'foo')
