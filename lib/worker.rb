@@ -5,7 +5,7 @@ require_relative './timer.rb'
 class Worker
   attr_reader :id, :name, :started_work_at, :finished_work_at
 
-  def initialize(id, name, started_work_at=nil, finished_work_at=nil)
+  def self.check_id(id)
     unless id.instance_of?(Integer)
       raise TypeError, 'id must be an integer.'
     end
@@ -13,17 +13,21 @@ class Worker
     if id.negative?
       raise RangeError, 'id must be non-negative.'
     end
-
+  end
+  
+  def self.check_name(name)
     unless name.instance_of?(String)
       raise TypeError, 'name must be a string.'
     end
+  end
 
+  def self.check_work_time(started_work_at, finished_work_at)
     unless started_work_at.nil? || started_work_at.instance_of?(Time)
-      raise TypeError, 'started_work_at must be an integer or nil.'
+      raise TypeError, 'started_work_at must be nil or an instance of Time.'
     end
 
     unless finished_work_at.nil? || finished_work_at.instance_of?(Time)
-      raise TypeError, 'finished_work_at must be an integer or nil.'
+      raise TypeError, 'finished_work_at must be nil or an instance of Time.'
     end
 
     if started_work_at.nil? && !finished_work_at.nil?
@@ -33,6 +37,12 @@ class Worker
     if !started_work_at.nil? && !finished_work_at.nil? && (finished_work_at - started_work_at).negative?
       raise ArgumentError, 'started_work_at must be before finished_work_at.'
     end
+  end
+
+  def initialize(id, name, started_work_at=nil, finished_work_at=nil)
+    Worker.check_id(id)
+    Worker.check_name(name)
+    Worker.check_work_time(started_work_at, finished_work_at)
 
     @id = id
     @name = name 
