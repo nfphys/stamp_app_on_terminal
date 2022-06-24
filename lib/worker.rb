@@ -211,5 +211,17 @@ class Worker
 
     Timer.create_from_sec(finished_work_at - started_work_at)
   end
+
+  def breaking_hours 
+    sum_sec = 0
+    (0...started_break_at.size).each do |i|
+      if finished_break_at[i]
+        sum_sec += finished_break_at[i] - started_break_at[i]
+      else 
+        sum_sec += Time.now - started_break_at[i]
+      end
+    end
+    Timer.create_from_sec(sum_sec)
+  end
 end
 
