@@ -200,6 +200,25 @@ class TestWorker < Minitest::Test
     assert_equal '退勤済', worker.status
   end
 
+  def test_finish_break 
+    worker = Worker.new(0, 'foo')
+
+    worker = worker.finish_break 
+    assert_equal '出勤前', worker.status 
+
+    worker = worker.start_work 
+    worker = worker.finish_break 
+    assert_equal '勤務中', worker.status 
+
+    worker = worker.start_break 
+    worker = worker.finish_break 
+    assert_equal '勤務中', worker.status 
+
+    worker = worker.finish_work 
+    worker = worker.finish_break 
+    assert_equal '退勤済', worker.status 
+  end
+
   def test_start_to_finish
     # workerを作成
     worker = Worker.new(0, 'foo')
