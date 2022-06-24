@@ -77,6 +77,9 @@ begin
     勤務開始時刻: #{worker.started_work_at}
     勤務終了時刻: #{worker.finished_work_at}
 
+    休憩時間: #{worker.breaking_hours}
+    休憩回数: #{worker.started_break_at.size}
+
     コマンド: 
     出勤(s) 退勤(f) 休憩(b) 再開(r) 終了(q)
 
@@ -89,12 +92,12 @@ begin
       Timeout.timeout(0.1) do
         command = win.getch
         case command
-        when 's'
+        when 's' # 出勤
           if worker.status == '退勤済'
             log = "既に退勤しています"
             break 
           end
-          if worker.status == '勤務中'
+          if worker.status != "出勤前"
             log = "既に出勤しています"
             break 
           end
@@ -112,7 +115,7 @@ begin
             TEXT
           )
 
-        when 'f'
+        when 'f' #退勤
           if worker.status == '出勤前'
             log = "まだ出勤していません"
             break 
@@ -134,7 +137,44 @@ begin
             TEXT
           )
 
-        when 'q'
+        when 'b' # 休憩
+          if worker.status == "出勤前"
+            log = "まだ出勤していません"
+            break 
+          end
+          if worker.status == "退勤済"
+            log = "既に退勤しています"
+            break
+          end
+          if worker.status == "休憩中"
+            log = "既に休憩しています"
+            break 
+          end
+          log = "hogehuga"
+          worker = worker.start_break 
+          log = "休憩を開始しました"
+
+          # データベースに休憩開始時間を記録
+
+        when 'r' # 再開
+          if worker.status == "出勤前"
+            log = "まだ出勤していません"
+            break 
+          end
+          if worker.status == "退勤済"
+            log = "既に退勤しています"
+            break
+          end
+          if worker.status == "勤務中"
+            log = "まだ休憩していません"
+            break 
+          end
+          worker = worker.finish_break 
+          log = "休憩を終了しました"
+
+          # データベースに休憩終了時間を記録
+
+        when 'q' # 終了
           Curses.close_screen
           exit
 
