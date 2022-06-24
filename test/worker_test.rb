@@ -1,6 +1,7 @@
 require 'time'
 require 'minitest/autorun'
 require_relative '../lib/worker.rb'
+require_relative '../lib/timer.rb'
 
 class TestWorker < Minitest::Test 
   def test_check_id 
@@ -229,5 +230,19 @@ class TestWorker < Minitest::Test
     finished_work_at = Time.local(2021, 12,  4, 18, 55, 45, 0)
     worker = Worker.new(0, 'foo', started_work_at, finished_work_at)
     assert_equal Timer.new(18, 22, 22), worker.working_hours
+
+    now = Time.now
+    worker = Worker.new(0, 'foo', now, now+100)
+    assert_equal Timer.create_from_sec(100), worker.working_hours
+  end
+
+  def test_breaking_hours 
+    t = Time.now - 100
+
+    worker = Worker.new(0, 'foo', t, nil, [t, t+30], [t+3])
+    assert_equal Timer.create_from_sec(73), worker.breaking_hours
+
+    worker = Worker.new(0, 'foo', t, t+100, [t+10, t+30], [t+13, t+45])
+    assert_equal Timer.create_from_sec(18), worker.breaking_hours
   end
 end
