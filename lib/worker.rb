@@ -146,7 +146,7 @@ class Worker
 
   def start_work 
     if status != "出勤前" 
-      puts "既に出勤しています。"
+      # puts "既に出勤しています。"
       return self 
     end
 
@@ -156,16 +156,27 @@ class Worker
 
   def finish_work 
     if status == "出勤前"
-      puts "まだ出勤していません。"
+      # puts "まだ出勤していません。"
       return self 
     end
 
     if status == "退勤済" 
-      puts "既に退勤しています。"
+      # puts "既に退勤しています。"
       return self 
     end
     
-    finished_work_at = Time.now
+    now = Time.now 
+    finished_work_at = now
+
+    if status == "休憩中"
+      puts 1
+      finished_break_at = @finished_break_at + [now]
+      return Worker.new(
+        id, name, started_work_at, finished_work_at, 
+        started_break_at, finished_break_at
+      )
+    end
+
     Worker.new(id, name, started_work_at, finished_work_at)
   end
 
