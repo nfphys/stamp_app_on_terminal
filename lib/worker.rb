@@ -128,8 +128,24 @@ class Worker
     self.freeze
   end
 
+  def status 
+    if started_work_at.nil?
+      return "出勤前"
+    end
+
+    if !finished_work_at.nil?
+      return "退勤済"
+    end
+
+    if started_break_at.size == finished_break_at.size + 1
+      return "休憩中"
+    end
+
+    "勤務中"
+  end
+
   def start_work 
-    if started_work_at 
+    if status != "出勤前" 
       puts "既に出勤しています。"
       return self 
     end
@@ -139,17 +155,16 @@ class Worker
   end
 
   def finish_work 
-    if started_work_at.nil?
+    if status == "出勤前"
       puts "まだ出勤していません。"
       return self 
     end
 
-    if finished_work_at 
+    if status == "退勤済" 
       puts "既に退勤しています。"
       return self 
     end
     
-    finished_work_at = Time.now 
     Worker.new(id, name, started_work_at, finished_work_at)
   end
 
@@ -158,17 +173,6 @@ class Worker
     finished_work_at.nil?
   end
 
-  def status 
-    if started_work_at.nil?
-      return "出勤前"
-    end
-
-    if finished_work_at.nil?
-      return "勤務中"
-    end
-
-    "退勤済"
-  end
 
   def reset 
     Worker.new(id, name)
