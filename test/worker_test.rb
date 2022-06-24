@@ -194,6 +194,10 @@ class TestWorker < Minitest::Test
     worker = worker.start_break 
     assert_equal '休憩中', worker.status 
 
+    worker = worker.finish_break 
+    assert_equal '勤務中', worker.status
+
+    worker = worker.start_break 
     worker = worker.finish_work 
     assert_equal '退勤済', worker.status
 
