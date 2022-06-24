@@ -146,6 +146,25 @@ class TestWorker < Minitest::Test
     assert_equal 'started_break_at[i] must be before finished_break_at[i].', e.message
   end
 
+  def test_status 
+    now = Time.now 
+
+    worker = Worker.new(0, 'foo')
+    assert_equal '出勤前', worker.status 
+
+    worker = Worker.new(0, 'foo', now, nil)
+    assert_equal '勤務中', worker.status
+
+    worker = Worker.new(0, 'foo', now, now+100)
+    assert_equal '退勤済', worker.status
+
+    worker = Worker.new(0, 'foo', now, nil, [now+10], [])
+    assert_equal '休憩中', worker.status
+
+    worker = Worker.new(0, 'foo', now, nil, [now+10, now+20], [now+15])
+    assert_equal '休憩中', worker.status
+  end
+
   def test_start_to_finish
     # workerを作成
     worker = Worker.new(0, 'foo')
