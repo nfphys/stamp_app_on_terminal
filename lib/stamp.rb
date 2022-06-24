@@ -72,6 +72,7 @@ begin
     ようこそ、#{name}さん
 
     勤務状況: #{worker.status}
+
     勤務時間: #{worker.working_hours}
     勤務開始時刻: #{worker.started_work_at}
     勤務終了時刻: #{worker.finished_work_at}
@@ -131,6 +132,7 @@ begin
             UPDATE work_data
             SET finished_work_at = '#{worker.finished_work_at.to_s.scan(datetime_regexp).first}'
             WHERE started_work_at = '#{worker.started_work_at.to_s.scan(datetime_regexp).first}'
+            AND user_id = #{worker.id}
             TEXT
           )
 
