@@ -77,10 +77,8 @@ begin
     勤務開始時刻: #{worker.started_work_at}
     勤務終了時刻: #{worker.finished_work_at}
 
-    以下の数字を入力してください: 
-    1. 出勤
-    2. 退勤
-    3. 終了
+    コマンド: 
+    出勤(s) 退勤(f) 休憩(b) 再開(r) 終了(q)
 
     [LOG] #{log}
     TEXT
@@ -89,14 +87,14 @@ begin
 
     begin 
       Timeout.timeout(0.1) do
-        operation_number = win.getch.to_i 
-        case operation_number 
-        when 1 
-          if worker.finished_work_at 
+        command = win.getch
+        case command
+        when 's'
+          if worker.status == '退勤済'
             log = "既に退勤しています"
             break 
           end
-          if worker.started_work_at 
+          if worker.status == '勤務中'
             log = "既に出勤しています"
             break 
           end
@@ -114,12 +112,12 @@ begin
             TEXT
           )
 
-        when 2 
-          if worker.started_work_at.nil?
+        when 'f'
+          if worker.status == '出勤前'
             log = "まだ出勤していません"
             break 
           end
-          if worker.finished_work_at 
+          if worker.status == '退勤済'
             log = "既に退勤しています"
             break 
           end
@@ -136,7 +134,7 @@ begin
             TEXT
           )
 
-        when 3 
+        when 'q'
           Curses.close_screen
           exit
 
