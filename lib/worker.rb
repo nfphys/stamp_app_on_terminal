@@ -180,6 +180,15 @@ class Worker
     Worker.new(id, name, started_work_at, finished_work_at)
   end
 
+  def start_break 
+    if status != "勤務中"
+      return self 
+    end
+
+    p started_break_at = @started_break_at + [Time.now]
+    Worker.new(id, name, started_work_at, finished_work_at, started_break_at)
+  end
+
   def working_hours 
     if started_work_at.nil?
       return Timer.create_from_sec(0)
