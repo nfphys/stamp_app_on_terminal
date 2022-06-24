@@ -32,17 +32,26 @@ class TestWorker < Minitest::Test
     assert_equal 'name must be a string.', e.message
   end
 
-  def test_check_work_time 
-    now = Time.now
+  def test_check_started_work_at 
+    now = Time.now 
+
     e = assert_raises TypeError do 
       Worker.new(0, 'foo', 100)
     end
     assert_equal 'started_work_at must be nil or an instance of Time.', e.message
+  end
+
+  def test_check_finished_work_at 
+    now = Time.now
 
     e = assert_raises TypeError do 
       Worker.new(0, 'foo', now, 100)
     end
     assert_equal 'finished_work_at must be nil or an instance of Time.', e.message
+  end
+
+  def test_check_started_and_finished_work_at 
+    now = Time.now
 
     e = assert_raises ArgumentError do 
       Worker.new(0, 'foo', nil, now)
@@ -53,6 +62,88 @@ class TestWorker < Minitest::Test
       Worker.new(0, 'foo', now, now - 100)
     end
     assert_equal 'started_work_at must be before finished_work_at.', e.message
+  end
+
+  def test_check_started_break_at 
+    now = Time.now 
+
+    e = assert_raises TypeError do 
+      Worker.new(0, 'foo', now, now+100, now)
+    end
+    assert_equal 'started_break_at must be an array.', e.message
+
+    e = assert_raises TypeError do 
+      Worker.new(0, 'foo', now, now+100, [1, nil])
+    end
+    assert_equal 'Each element of started_break_at must be an instance of Time.', e.message
+
+    e = assert_raises ArgumentError do 
+      Worker.new(0, 'foo', now, now+100, [now-10, now+10])
+    end
+    assert_equal 'Each element of started_break_at must be after started_work_at.', e.message
+
+    e = assert_raises ArgumentError do 
+      Worker.new(0, 'foo', now, now+100, [now+10, now+110])
+    end
+    assert_equal 'Each element of started_break_at must be before finished_work_at.', e.message
+
+    e = assert_raises ArgumentError do 
+      Worker.new(0, 'foo', now, now+100, [now+10, now+5])
+    end
+    assert_equal 'started_break_at[i] must be before started_break_at[i+1].', e.message
+  end
+
+  def test_check_finished_break_at
+    now = Time.now 
+
+    e = assert_raises TypeError do 
+      Worker.new(0, 'foo', now, now+100, [now], now)
+    end
+    assert_equal 'finished_break_at must be an array.', e.message
+
+    e = assert_raises TypeError do 
+      Worker.new(0, 'foo', now, now+100, [now], [1, nil])
+    end
+    assert_equal 'Each element of finished_break_at must be an instance of Time.', e.message 
+
+    e = assert_raises ArgumentError do 
+      Worker.new(0, 'foo', now, now+100, [now+10, now+20], [now+15, now-12])
+    end
+    assert_equal 'Each element of finished_break_at must be after started_work_at.', e.message
+
+    e = assert_raises ArgumentError do 
+      Worker.new(0, 'foo', now, now+100, [now+10, now+20], [now+110, now+25])
+    end
+    assert_equal 'Each element of finished_break_at must be before finished_work_at', e.message
+
+    e = assert_raises ArgumentError do 
+      Worker.new(0, 'foo', now, now+100, [now+10, now+20], [now+15, now+12])
+    end
+    assert_equal 'finished_break_at[i] must be before finished_break_at[i].', e.message
+  end
+
+  def test_check_started_and_finished_break_at
+    now = Time.now 
+
+    e = assert_raises ArgumentError do 
+      Worker.new(0, 'foo', now, now+100, [now+10, now+20], [])
+    end
+    assert_equal '(started_break_at.size - finished_break_at.size) must be 0 or 1.', e.message
+
+    e = assert_raises ArgumentError do 
+      Worker.new(0, 'foo', now, now+100, [now+10, now+20], [now+15, now+25, now+35])
+    end
+    assert_equal '(started_break_at.size - finished_break_at.size) must be 0 or 1.', e.message
+
+    e = assert_raises ArgumentError do 
+      Worker.new(0, 'foo', now, now+100, [now+10, now+20], [now+5])
+    end
+    assert_equal 'started_break_at[i] must be before finished_break_at[i].', e.message
+
+    e = assert_raises ArgumentError do 
+      Worker.new(0, 'foo', now, now+100, [now+10, now+20], [now+12, now+18])
+    end
+    assert_equal 'started_break_at[i] must be before finished_break_at[i].', e.message
   end
 
   def test_start_to_finish
