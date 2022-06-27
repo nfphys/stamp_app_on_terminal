@@ -3,14 +3,11 @@ require 'curses'
 require 'timeout'
 require_relative './worker.rb'
 
-datetime_regexp = /\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/
-
 client = Mysql2::Client.new(
   host: 'localhost',
   username: 'root',
   password: 'Sql0463'
 )
-client.query("use stamp_app_on_terminal;")
 
 Curses.init_screen 
 Curses.curs_set(0) # invisible cursor
@@ -64,19 +61,8 @@ begin
             log = "s: 既に出勤しています"
             break 
           end
-          worker = worker.start_work 
+          worker = worker.start_work(client)
           log = "s: 出勤しました"
-
-          # データベースに出勤時間を記録
-          client.query(
-            <<~TEXT
-            INSERT INTO work_data(started_work_at, user_id) 
-            VALUES (
-              '#{worker.started_work_at.to_s.scan(datetime_regexp).first}', 
-              '#{worker.id}'
-            )
-            TEXT
-          )
 
         when 'f' #退勤
           unless worker.started_work?
@@ -87,18 +73,8 @@ begin
             log = "f: 既に退勤しています"
             break 
           end
-          worker = worker.finish_work 
+          worker = worker.finish_work(client)
           log = "f: 退勤しました"
-
-          # データベースに退勤時間を記録
-          client.query(
-            <<~TEXT
-            UPDATE work_data
-            SET finished_work_at = '#{worker.finished_work_at.to_s.scan(datetime_regexp).first}'
-            WHERE started_work_at = '#{worker.started_work_at.to_s.scan(datetime_regexp).first}'
-            AND user_id = #{worker.id}
-            TEXT
-          )
 
         when 'b' # 休憩
           unless worker.started_work?
@@ -113,10 +89,8 @@ begin
             log = "b: 既に休憩しています"
             break 
           end
-          worker = worker.start_break 
+          worker = worker.start_break(client)
           log = "b: 休憩を開始しました"
-
-          # データベースに休憩開始時間を記録
 
         when 'r' # 再開
           unless worker.started_work?
@@ -131,7 +105,7 @@ begin
             log = "r: まだ休憩していません"
             break 
           end
-          worker = worker.finish_break 
+          worker = worker.finish_break(client)
           log = "r: 休憩を終了しました"
 
           # データベースに休憩終了時間を記録
