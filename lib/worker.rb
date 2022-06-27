@@ -4,7 +4,9 @@ require 'mysql2'
 require_relative './timer.rb'
 
 class Worker
-  attr_reader :id, :name, :started_work_at, :finished_work_at, :started_break_at, :finished_break_at
+  attr_reader :id, :name, 
+  :work_data_id, :started_work_at, :finished_work_at, 
+  :break_data_ids, :started_break_at, :finished_break_at
 
   def self.check_id(id)
     unless id.instance_of?(Integer)
@@ -111,8 +113,10 @@ class Worker
   def initialize(
     id:, 
     name:, 
+    work_data_id: nil,
     started_work_at: nil, 
     finished_work_at: nil, 
+    break_data_ids: [],
     started_break_at: [], 
     finished_break_at: []
   )
@@ -129,10 +133,15 @@ class Worker
 
     @id = id
     @name = name 
+
+    @work_data_id = work_data_id
     @started_work_at = started_work_at
     @finished_work_at = finished_work_at
+
+    @break_data_ids = break_data_ids
     @started_break_at = started_break_at
     @finished_break_at = finished_break_at
+
     self.freeze
   end
 
@@ -190,9 +199,12 @@ class Worker
         TEXT
       )
 
+    break_data_ids = []
     started_break_at = []
     finished_break_at = []
+
     break_data_results.each do |result|
+      break_data_ids << result['id']
       started_break_at << result['started_break_at']
       if result['finished_break_at']
         finished_break_at << result['finished_break_at']
@@ -202,8 +214,10 @@ class Worker
     return Worker.new(
       id: user_id, 
       name: name, 
+      work_data_id: work_data_id,
       started_work_at: started_work_at, 
       finished_work_at: finished_work_at, 
+      break_data_ids: break_data_ids, 
       started_break_at: started_break_at, 
       finished_break_at: finished_break_at
     )
