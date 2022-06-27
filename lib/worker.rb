@@ -108,7 +108,14 @@ class Worker
     end
   end
 
-  def initialize(id, name, started_work_at=nil, finished_work_at=nil, started_break_at=[], finished_break_at=[])
+  def initialize(
+    id:, 
+    name:, 
+    started_work_at: nil, 
+    finished_work_at: nil, 
+    started_break_at: [], 
+    finished_break_at: []
+  )
     Worker.check_id(id)
     Worker.check_name(name)
 
@@ -161,7 +168,7 @@ class Worker
       )
 
     if work_data_results.size.zero?
-      return Worker.new(user_id, name)
+      return Worker.new(id: user_id, name: name)
     end
 
     work_data_id = work_data_results.first['id']
@@ -169,7 +176,7 @@ class Worker
     finished_work_at = work_data_results.first['finished_work_at']
 
     if finished_work_at
-      return Worker.new(user_id, name)
+      return Worker.new(id: user_id, name: name)
     end
 
     break_data_results = 
@@ -193,8 +200,12 @@ class Worker
     end
 
     return Worker.new(
-      user_id, name, started_work_at, finished_work_at, 
-      started_break_at, finished_break_at
+      id: user_id, 
+      name: name, 
+      started_work_at: started_work_at, 
+      finished_work_at: finished_work_at, 
+      started_break_at: started_break_at, 
+      finished_break_at: finished_break_at
     )
   end
 
@@ -236,7 +247,7 @@ class Worker
     return self if started_work?
 
     started_work_at = Time.now 
-    Worker.new(id, name, started_work_at)
+    Worker.new(id: id, name: name, started_work_at: started_work_at)
   end
 
   def finish_work 
@@ -249,19 +260,35 @@ class Worker
     if breaking?
       finished_break_at = @finished_break_at + [now]
       return Worker.new(
-        id, name, started_work_at, finished_work_at, 
-        started_break_at, finished_break_at
+        id: id, 
+        name: name, 
+        started_work_at: started_work_at, 
+        finished_work_at: finished_work_at, 
+        started_break_at: started_break_at, 
+        finished_break_at: finished_break_at
       )
     end
 
-    Worker.new(id, name, started_work_at, finished_work_at)
+    Worker.new(
+      id: id, 
+      name: name, 
+      started_work_at: started_work_at, 
+      finished_work_at: finished_work_at
+    )
   end
 
   def start_break 
     return self unless working?
 
     started_break_at = @started_break_at + [Time.now]
-    Worker.new(id, name, started_work_at, finished_work_at, started_break_at, finished_break_at)
+    Worker.new(
+      id: id, 
+      name: name, 
+      started_work_at: started_work_at, 
+      finished_work_at: finished_work_at, 
+      started_break_at: started_break_at, 
+      finished_break_at: finished_break_at
+    )
   end
 
   def finish_break 
@@ -269,8 +296,12 @@ class Worker
 
     finished_break_at = @finished_break_at + [Time.now]
     Worker.new(
-      id, name, started_work_at, finished_work_at, 
-      started_break_at, finished_break_at
+      id: id, 
+      name: name, 
+      started_work_at: started_work_at, 
+      finished_work_at: finished_work_at, 
+      started_break_at: started_break_at, 
+      finished_break_at: finished_break_at
     )
   end
 
