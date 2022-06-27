@@ -128,16 +128,34 @@ class Worker
     self.freeze
   end
 
+  def started_work?
+    !!started_work_at
+  end
+
+  def finished_work?
+    !!finished_work_at 
+  end
+
+  def breaking?
+    started_break_at.size == finished_break_at.size + 1
+  end
+
+  def working?
+    return false unless started_work?
+    return false if finished_work?
+    !breaking?
+  end
+
   def status 
-    if started_work_at.nil?
+    unless started_work?
       return "出勤前"
     end
 
-    if !finished_work_at.nil?
+    if finished_work?
       return "退勤済"
     end
 
-    if started_break_at.size == finished_break_at.size + 1
+    if breaking?
       return "休憩中"
     end
 
@@ -145,30 +163,20 @@ class Worker
   end
 
   def start_work 
-    if status != "出勤前" 
-      # puts "既に出勤しています。"
-      return self 
-    end
+    return self if started_work?
 
     started_work_at = Time.now 
     Worker.new(id, name, started_work_at)
   end
 
   def finish_work 
-    if status == "出勤前"
-      # puts "まだ出勤していません。"
-      return self 
-    end
-
-    if status == "退勤済" 
-      # puts "既に退勤しています。"
-      return self 
-    end
+    return self unless started_work?
+    return self if finished_work?
     
     now = Time.now 
     finished_work_at = now
 
-    if status == "休憩中"
+    if breaking?
       finished_break_at = @finished_break_at + [now]
       return Worker.new(
         id, name, started_work_at, finished_work_at, 
@@ -180,18 +188,14 @@ class Worker
   end
 
   def start_break 
-    if status != "勤務中"
-      return self 
-    end
+    return self unless working?
 
     started_break_at = @started_break_at + [Time.now]
     Worker.new(id, name, started_work_at, finished_work_at, started_break_at, finished_break_at)
   end
 
   def finish_break 
-    if status != "休憩中"
-      return self 
-    end
+    return self unless breaking?
 
     finished_break_at = @finished_break_at + [Time.now]
     Worker.new(
