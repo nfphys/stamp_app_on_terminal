@@ -24,44 +24,7 @@ begin
   win.addstr("名前: ")
   name = win.getstr
 
-  # ユーザを検索
-  users_results = client.query(
-    <<~TEXT
-    SELECT * 
-    FROM users
-    WHERE name = "#{name}"
-    ;
-    TEXT
-  )
-  if users_results.size.zero?
-    win.addstr("ユーザが見つかりませんでした")
-    win.getch
-    Curses.close_screen
-    exit
-  end
-  # p users_results.first 
-  # win.getch
-
-  user_id = users_results.first['id']
-  worker = Worker.new(user_id, name)
-
-  # 最新の勤務データを検索
-  work_data_results = client.query(
-    <<~TEXT 
-    SELECT * 
-    FROM work_data
-    WHERE user_id = '#{user_id}'
-    ORDER BY started_work_at DESC
-    LIMIT 1
-    ;
-    TEXT
-  )
-  # p work_data_results.first
-  # win.getch
-
-  if work_data_results.size.positive? && work_data_results.first['finished_work_at'].nil?
-    worker = Worker.new(user_id, name, work_data_results.first['started_work_at'])
-  end
+  worker = Worker.load_from_database(client, name)
   
   log = ""
 
@@ -93,16 +56,16 @@ begin
         command = win.getch
         case command
         when 's' # 出勤
-          if worker.status == '退勤済'
-            log = "既に退勤しています"
+          if worker.finished_work?
+            log = "s: 既に退勤しています"
             break 
           end
-          if worker.status != "出勤前"
-            log = "既に出勤しています"
+          if worker.started_work?
+            log = "s: 既に出勤しています"
             break 
           end
           worker = worker.start_work 
-          log = "出勤しました"
+          log = "s: 出勤しました"
 
           # データベースに出勤時間を記録
           client.query(
@@ -116,16 +79,16 @@ begin
           )
 
         when 'f' #退勤
-          if worker.status == '出勤前'
-            log = "まだ出勤していません"
+          unless worker.started_work?
+            log = "f: まだ出勤していません"
             break 
           end
-          if worker.status == '退勤済'
-            log = "既に退勤しています"
+          if worker.finished_work?
+            log = "f: 既に退勤しています"
             break 
           end
           worker = worker.finish_work 
-          log = "退勤しました"
+          log = "f: 退勤しました"
 
           # データベースに退勤時間を記録
           client.query(
@@ -138,39 +101,38 @@ begin
           )
 
         when 'b' # 休憩
-          if worker.status == "出勤前"
-            log = "まだ出勤していません"
+          unless worker.started_work?
+            log = "b: まだ出勤していません"
             break 
           end
-          if worker.status == "退勤済"
-            log = "既に退勤しています"
+          if worker.finished_work?
+            log = "b: 既に退勤しています"
             break
           end
-          if worker.status == "休憩中"
-            log = "既に休憩しています"
+          if worker.breaking?
+            log = "b: 既に休憩しています"
             break 
           end
-          log = "hogehuga"
           worker = worker.start_break 
-          log = "休憩を開始しました"
+          log = "b: 休憩を開始しました"
 
           # データベースに休憩開始時間を記録
 
         when 'r' # 再開
-          if worker.status == "出勤前"
-            log = "まだ出勤していません"
+          unless worker.started_work?
+            log = "r: まだ出勤していません"
             break 
           end
-          if worker.status == "退勤済"
-            log = "既に退勤しています"
+          if worker.finished_work?
+            log = "r: 既に退勤しています"
             break
           end
-          if worker.status == "勤務中"
-            log = "まだ休憩していません"
+          if worker.working?
+            log = "r: まだ休憩していません"
             break 
           end
           worker = worker.finish_break 
-          log = "休憩を終了しました"
+          log = "r: 休憩を終了しました"
 
           # データベースに休憩終了時間を記録
 
@@ -180,9 +142,13 @@ begin
 
         end
       end
+
     rescue
+
     end
+
   end
+
 rescue
   Curses.close_screen
 end

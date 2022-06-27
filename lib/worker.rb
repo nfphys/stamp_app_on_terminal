@@ -1,5 +1,6 @@
 require 'date'
 require 'time'
+require 'mysql2'
 require_relative './timer.rb'
 
 class Worker
@@ -126,6 +127,75 @@ class Worker
     @started_break_at = started_break_at
     @finished_break_at = finished_break_at
     self.freeze
+  end
+
+  def self.load_from_database(client, name)
+    client.query('use stamp_app_on_terminal;')
+
+    users_results = 
+      client.query(
+        <<~TEXT
+        SELECT * 
+        FROM users
+        WHERE name = "#{name}"
+        ;
+        TEXT
+      )
+
+    if users_results.size.zero?
+      raise 'ユーザが見つかりませんでした'
+    end
+
+    user_id = users_results.first['id']
+
+    work_data_results = 
+      client.query(
+        <<~TEXT 
+        SELECT * 
+        FROM work_data
+        WHERE user_id = '#{user_id}'
+        ORDER BY started_work_at DESC
+        LIMIT 1
+        ;
+        TEXT
+      )
+
+    if work_data_results.size.zero?
+      return Worker.new(user_id, name)
+    end
+
+    work_data_id = work_data_results.first['id']
+    started_work_at = work_data_results.first['started_work_at']
+    finished_work_at = work_data_results.first['finished_work_at']
+
+    if finished_work_at
+      return Worker.new(user_id, name)
+    end
+
+    break_data_results = 
+      client.query(
+        <<~TEXT
+        SELECT * 
+        FROM break_data
+        WHERE user_id = #{user_id} AND work_data_id = #{work_data_id}
+        ORDER BY started_break_at ASC
+        ;
+        TEXT
+      )
+
+    started_break_at = []
+    finished_break_at = []
+    break_data_results.each do |result|
+      started_break_at << result['started_break_at']
+      if result['finished_break_at']
+        finished_break_at << result['finished_break_at']
+      end
+    end
+
+    return Worker.new(
+      user_id, name, started_work_at, finished_work_at, 
+      started_break_at, finished_break_at
+    )
   end
 
   def started_work?
