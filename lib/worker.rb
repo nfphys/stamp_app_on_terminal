@@ -4,6 +4,8 @@ require 'mysql2'
 require_relative './timer.rb'
 
 class Worker
+  DATETIME_REGEXP = /\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/
+
   attr_reader :id, :name, 
   :work_data_id, :started_work_at, :finished_work_at, 
   :break_data_ids, :started_break_at, :finished_break_at
@@ -123,9 +125,15 @@ class Worker
     Worker.check_id(id)
     Worker.check_name(name)
 
+    Worker.check_id(work_data_id) if work_data_id
+
     Worker.check_started_work_at(started_work_at)
     Worker.check_finished_work_at(finished_work_at)
     Worker.check_started_and_finished_work_at(started_work_at, finished_work_at)
+
+    break_data_ids.each do |break_data_id|
+      Worker.check_id(break_data_id)
+    end
 
     Worker.check_started_break_at(started_work_at, finished_work_at, started_break_at)
     Worker.check_finished_break_at(started_work_at, finished_work_at, finished_break_at)
@@ -146,7 +154,7 @@ class Worker
   end
 
   def self.load_from_database(client, name)
-    client.query('use stamp_app_on_terminal;')
+    client.query('USE stamp_app_on_terminal;')
 
     users_results = 
       client.query(
@@ -257,27 +265,81 @@ class Worker
     "勤務中"
   end
 
-  def start_work 
+  def start_work(client = nil)
     return self if started_work?
 
     started_work_at = Time.now 
+
+    if client
+      client.query('USE stamp_app_on_terminal;')
+      client.query(
+        <<~TEXT
+        INSERT INTO work_data(started_work_at, user_id) 
+        VALUES (
+          '#{started_work_at.to_s.scan(DATETIME_REGEXP).first}', 
+          '#{id}'
+        )
+        TEXT
+      )
+      results = 
+        client.query(
+          <<~TEXT
+          SELECT *
+          FROM work_data
+          ORDER BY id DESC
+          LIMIT 1
+          TEXT
+        )
+      work_data_id = results.first['id']
+      return Worker.new(
+        id: id, 
+        name: name, 
+        work_data_id: work_data_id,
+        started_work_at: started_work_at
+      )
+    end
+
     Worker.new(id: id, name: name, started_work_at: started_work_at)
   end
 
-  def finish_work 
+  def finish_work(client = nil)
     return self unless started_work?
     return self if finished_work?
     
     now = Time.now 
     finished_work_at = now
 
+    if client 
+      client.query('USE stamp_app_on_terminal;')
+      client.query(
+        <<~TEXT
+        UPDATE work_data
+        SET finished_work_at = '#{finished_work_at.to_s.scan(DATETIME_REGEXP).first}'
+        WHERE id = '#{work_data_id}'
+        TEXT
+      )
+    end
+
     if breaking?
       finished_break_at = @finished_break_at + [now]
+
+      if client
+        client.query(
+          <<~TEXT
+          UPDATE break_data
+          SET finished_break_at = '#{finished_break_at.last.to_s.scan(DATETIME_REGEXP).first}'
+          WHERE id = '#{break_data_ids.last}'
+          TEXT
+        )
+      end
+
       return Worker.new(
         id: id, 
         name: name, 
+        work_data_id: work_data_id,
         started_work_at: started_work_at, 
         finished_work_at: finished_work_at, 
+        break_data_ids: break_data_ids, 
         started_break_at: started_break_at, 
         finished_break_at: finished_break_at
       )
@@ -286,15 +348,51 @@ class Worker
     Worker.new(
       id: id, 
       name: name, 
+      work_data_id: work_data_id,
       started_work_at: started_work_at, 
       finished_work_at: finished_work_at
     )
   end
 
-  def start_break 
+  def start_break(client = nil)
     return self unless working?
 
     started_break_at = @started_break_at + [Time.now]
+
+    if client 
+      client.query('USE stamp_app_on_terminal;')
+      client.query(
+        <<~TEXT
+        INSERT INTO break_data(started_break_at, user_id, work_data_id)
+        VALUES (
+          '#{started_break_at.last.to_s.scan(DATETIME_REGEXP).first}', 
+          '#{id}', 
+          '#{work_data_id}'
+        )
+        TEXT
+      )
+      break_data_results = 
+        client.query(
+          <<~TEXT
+          SELECT *
+          FROM break_data 
+          ORDER BY id DESC
+          LIMIT 1
+          TEXT
+        )
+      p break_data_ids = @break_data_ids + [break_data_results.first['id']]
+      return Worker.new(
+        id: id, 
+        name: name, 
+        work_data_id: work_data_id,
+        started_work_at: started_work_at, 
+        finished_work_at: finished_work_at, 
+        break_data_ids: break_data_ids,
+        started_break_at: started_break_at, 
+        finished_break_at: finished_break_at
+      )
+    end
+
     Worker.new(
       id: id, 
       name: name, 
@@ -305,10 +403,31 @@ class Worker
     )
   end
 
-  def finish_break 
+  def finish_break(client = nil)
     return self unless breaking?
 
     finished_break_at = @finished_break_at + [Time.now]
+
+    if client 
+      client.query(
+        <<~TEXT
+        UPDATE break_data
+        SET finished_break_at = '#{finished_break_at.last.to_s.scan(DATETIME_REGEXP).first}'
+        WHERE id = '#{break_data_ids.last}'
+        TEXT
+      )
+      return Worker.new(
+        id: id, 
+        name: name, 
+        work_data_id: work_data_id,
+        started_work_at: started_work_at, 
+        finished_work_at: finished_work_at, 
+        break_data_ids: break_data_ids,
+        started_break_at: started_break_at, 
+        finished_break_at: finished_break_at
+      )
+    end
+
     Worker.new(
       id: id, 
       name: name, 
