@@ -380,7 +380,7 @@ class Worker
           LIMIT 1
           TEXT
         )
-      p break_data_ids = @break_data_ids + [break_data_results.first['id']]
+      break_data_ids = @break_data_ids + [break_data_results.first['id']]
       return Worker.new(
         id: id, 
         name: name, 
