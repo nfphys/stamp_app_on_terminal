@@ -2,7 +2,6 @@ Gem::Specification.new do |s|
   s.name        = 'stamp'
   s.version     = '0.0.0'
   s.executables << 'stamp'
-  s.executables << 'create_database'
   s.summary     = 'Stamp App on Terminal'
   s.description = 'Records your daily working hours.'
   s.authors     = ['Fumiya Nakamura']
