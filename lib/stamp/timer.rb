@@ -1,4 +1,4 @@
-class Timer 
+class Worker::Timer 
   include Comparable
 
   attr_reader :hour, :min, :sec 
@@ -14,7 +14,7 @@ class Timer
 
     hour = t 
 
-    Timer.new(hour, min, sec)
+    Worker::Timer.new(hour, min, sec)
   end
 
   def initialize(hour, min, sec)
@@ -57,26 +57,26 @@ class Timer
   end
 
   def +(other)
-    if other.is_a?(Timer)
-      return Timer.create_from_sec(self.to_sec + other.to_sec)
+    if other.is_a?(Worker::Timer)
+      return Worker::Timer.create_from_sec(self.to_sec + other.to_sec)
     end
 
     if other.is_a?(Integer)
-      return Timer.create_from_sec(self.to_sec + other)
+      return Worker::Timer.create_from_sec(self.to_sec + other)
     end
 
     raise TypeError, 'other must be an instance of Timer or Integer.'
   end
 
   def -(other)
-    if other.is_a?(Timer)
+    if other.is_a?(Worker::Timer)
       t = self.to_sec - other.to_sec
-      return Timer.create_from_sec(t.negative? ? 0 : t)
+      return Worker::Timer.create_from_sec(t.negative? ? 0 : t)
     end
 
     if other.is_a?(Integer)
       t = self.to_sec - other 
-      return Timer.create_from_sec(t.negative? ? 0 : t)
+      return Worker::Timer.create_from_sec(t.negative? ? 0 : t)
     end
 
     raise TypeError, 'other must be an instance of Timer or Integer.'
@@ -84,7 +84,7 @@ class Timer
 
   def *(other)
     if other.is_a?(Integer)
-      return Timer.create_from_sec(self.to_sec * other)
+      return Worker::Timer.create_from_sec(self.to_sec * other)
     end
 
     raise TypeError, 'other must be an instance of Integer.'
