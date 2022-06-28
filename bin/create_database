@@ -1,9 +1,0 @@
-#!/usr/bin/env ruby 
-
-require 'io/console'
-require_relative '../lib/stamp.rb'
-
-print 'Enter password: '
-password = STDIN.noecho(&:gets).chomp
-
-create_database(password: password)
