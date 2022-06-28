@@ -28,23 +28,24 @@ begin
   loop do 
     win.clear
     win.setpos(0, 0)
-    win.addstr(<<~TEXT
-    ようこそ、#{name}さん
+    win.addstr(
+      <<~TEXT
+      ようこそ、#{name}さん
 
-    勤務状況: #{worker.status}
+      勤務状況: #{worker.status}
 
-    勤務時間: #{worker.working_hours}
-    勤務開始時刻: #{worker.started_work_at}
-    勤務終了時刻: #{worker.finished_work_at}
+      勤務時間: #{worker.working_hours}
+      勤務開始時刻: #{worker.started_work_at}
+      勤務終了時刻: #{worker.finished_work_at}
 
-    休憩時間: #{worker.breaking_hours}
-    休憩回数: #{worker.started_break_at.size}
+      休憩時間: #{worker.breaking_hours}
+      休憩回数: #{worker.started_break_at.size}
 
-    コマンド: 
-    出勤(s) 退勤(f) 休憩(b) 再開(r) 終了(q)
+      コマンド: 
+      出勤(s) 退勤(f) 休憩(b) 再開(r) 終了(q)
 
-    [LOG] #{log}
-    TEXT
+      [LOG] #{log}
+      TEXT
     )
     win.refresh # refresh わからん...
 
