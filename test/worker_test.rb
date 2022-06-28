@@ -4,6 +4,10 @@ require_relative '../lib/worker.rb'
 require_relative '../lib/timer.rb'
 
 class TestWorker < Minitest::Test 
+  def setup
+    @now = Time.now 
+  end
+
   def test_check_id 
     e = assert_raises TypeError do 
       Worker.new(id: '1', name: 'foo')
@@ -41,126 +45,114 @@ class TestWorker < Minitest::Test
   end
 
   def test_check_finished_work_at 
-    now = Time.now
-
     e = assert_raises TypeError do 
-      Worker.new(id: 0, name: 'foo', started_work_at: now, finished_work_at: 100)
+      Worker.new(id: 0, name: 'foo', started_work_at: @now, finished_work_at: 100)
     end
     assert_equal 'finished_work_at must be nil or an instance of Time.', e.message
   end
 
   def test_check_started_and_finished_work_at 
-    now = Time.now
-
     e = assert_raises ArgumentError do 
-      Worker.new(id: 0, name: 'foo', started_work_at: nil, finished_work_at: now)
+      Worker.new(id: 0, name: 'foo', started_work_at: nil, finished_work_at: @now)
     end
     assert_equal 'finished_work_at must be nil when started_work_at is nil.', e.message 
 
     e = assert_raises ArgumentError do 
-      Worker.new(id: 0, name: 'foo', started_work_at: now, finished_work_at: now - 100)
+      Worker.new(id: 0, name: 'foo', started_work_at: @now, finished_work_at: @now - 100)
     end
     assert_equal 'started_work_at must be before finished_work_at.', e.message
   end
 
   def test_check_started_break_at 
-    now = Time.now 
-
     e = assert_raises TypeError do 
-      Worker.new(id: 0, name: 'foo', started_work_at: now, finished_work_at: now+100, started_break_at: now)
+      Worker.new(id: 0, name: 'foo', started_work_at: @now, finished_work_at: @now+100, started_break_at: @now)
     end
     assert_equal 'started_break_at must be an array.', e.message
 
     e = assert_raises TypeError do 
-      Worker.new(id: 0, name: 'foo', started_work_at: now, finished_work_at: now+100, started_break_at: [1, nil])
+      Worker.new(id: 0, name: 'foo', started_work_at: @now, finished_work_at: @now+100, started_break_at: [1, nil])
     end
     assert_equal 'Each element of started_break_at must be an instance of Time.', e.message
 
     e = assert_raises ArgumentError do 
-      Worker.new(id: 0, name: 'foo', started_work_at: now, finished_work_at: now+100, started_break_at: [now-10, now+10])
+      Worker.new(id: 0, name: 'foo', started_work_at: @now, finished_work_at: @now+100, started_break_at: [@now-10, @now+10])
     end
     assert_equal 'Each element of started_break_at must be after started_work_at.', e.message
 
     e = assert_raises ArgumentError do 
-      Worker.new(id: 0, name: 'foo', started_work_at: now, finished_work_at: now+100, started_break_at: [now+10, now+110])
+      Worker.new(id: 0, name: 'foo', started_work_at: @now, finished_work_at: @now+100, started_break_at: [@now+10, @now+110])
     end
     assert_equal 'Each element of started_break_at must be before finished_work_at.', e.message
 
     e = assert_raises ArgumentError do 
-      Worker.new(id: 0, name: 'foo', started_work_at: now, finished_work_at: now+100, started_break_at: [now+10, now+5])
+      Worker.new(id: 0, name: 'foo', started_work_at: @now, finished_work_at: @now+100, started_break_at: [@now+10, @now+5])
     end
     assert_equal 'started_break_at[i] must be before started_break_at[i+1].', e.message
   end
 
   def test_check_finished_break_at
-    now = Time.now 
-
     e = assert_raises TypeError do 
-      Worker.new(id: 0, name: 'foo', started_work_at: now, finished_work_at: now+100, started_break_at: [now], finished_break_at: now)
+      Worker.new(id: 0, name: 'foo', started_work_at: @now, finished_work_at: @now+100, started_break_at: [@now], finished_break_at: @now)
     end
     assert_equal 'finished_break_at must be an array.', e.message
 
     e = assert_raises TypeError do 
-      Worker.new(id: 0, name: 'foo', started_work_at: now, finished_work_at: now+100, started_break_at: [now], finished_break_at: [1, nil])
+      Worker.new(id: 0, name: 'foo', started_work_at: @now, finished_work_at: @now+100, started_break_at: [@now], finished_break_at: [1, nil])
     end
     assert_equal 'Each element of finished_break_at must be an instance of Time.', e.message 
 
     e = assert_raises ArgumentError do 
-      Worker.new(id: 0, name: 'foo', started_work_at: now, finished_work_at: now+100, started_break_at: [now+10, now+20], finished_break_at: [now+15, now-12])
+      Worker.new(id: 0, name: 'foo', started_work_at: @now, finished_work_at: @now+100, started_break_at: [@now+10, @now+20], finished_break_at: [@now+15, @now-12])
     end
     assert_equal 'Each element of finished_break_at must be after started_work_at.', e.message
 
     e = assert_raises ArgumentError do 
-      Worker.new(id: 0, name: 'foo', started_work_at: now, finished_work_at: now+100, started_break_at: [now+10, now+20], finished_break_at: [now+110, now+25])
+      Worker.new(id: 0, name: 'foo', started_work_at: @now, finished_work_at: @now+100, started_break_at: [@now+10, @now+20], finished_break_at: [@now+110, @now+25])
     end
     assert_equal 'Each element of finished_break_at must be before finished_work_at', e.message
 
     e = assert_raises ArgumentError do 
-      Worker.new(id: 0, name: 'foo', started_work_at: now, finished_work_at: now+100, started_break_at: [now+10, now+20], finished_break_at: [now+15, now+12])
+      Worker.new(id: 0, name: 'foo', started_work_at: @now, finished_work_at: @now+100, started_break_at: [@now+10, @now+20], finished_break_at: [@now+15, @now+12])
     end
     assert_equal 'finished_break_at[i] must be before finished_break_at[i].', e.message
   end
 
   def test_check_started_and_finished_break_at
-    now = Time.now 
-
     e = assert_raises ArgumentError do 
-      Worker.new(id: 0, name: 'foo', started_work_at: now, finished_work_at: now+100, started_break_at: [now+10, now+20], finished_break_at: [])
+      Worker.new(id: 0, name: 'foo', started_work_at: @now, finished_work_at: @now+100, started_break_at: [@now+10, @now+20], finished_break_at: [])
     end
     assert_equal '(started_break_at.size - finished_break_at.size) must be 0 or 1.', e.message
 
     e = assert_raises ArgumentError do 
-      Worker.new(id: 0, name: 'foo', started_work_at: now, finished_work_at: now+100, started_break_at: [now+10, now+20], finished_break_at: [now+15, now+25, now+35])
+      Worker.new(id: 0, name: 'foo', started_work_at: @now, finished_work_at: @now+100, started_break_at: [@now+10, @now+20], finished_break_at: [@now+15, @now+25, @now+35])
     end
     assert_equal '(started_break_at.size - finished_break_at.size) must be 0 or 1.', e.message
 
     e = assert_raises ArgumentError do 
-      Worker.new(id: 0, name: 'foo', started_work_at: now, finished_work_at: now+100, started_break_at: [now+10, now+20], finished_break_at: [now+5])
+      Worker.new(id: 0, name: 'foo', started_work_at: @now, finished_work_at: @now+100, started_break_at: [@now+10, @now+20], finished_break_at: [@now+5])
     end
     assert_equal 'started_break_at[i] must be before finished_break_at[i].', e.message
 
     e = assert_raises ArgumentError do 
-      Worker.new(id: 0, name: 'foo', started_work_at: now, finished_work_at: now+100, started_break_at: [now+10, now+20], finished_break_at: [now+12, now+18])
+      Worker.new(id: 0, name: 'foo', started_work_at: @now, finished_work_at: @now+100, started_break_at: [@now+10, @now+20], finished_break_at: [@now+12, @now+18])
     end
     assert_equal 'started_break_at[i] must be before finished_break_at[i].', e.message
   end
 
   def test_status 
-    now = Time.now 
-
     worker = Worker.new(id: 0, name: 'foo')
     assert_equal '出勤前', worker.status 
 
-    worker = Worker.new(id: 0, name: 'foo', started_work_at: now, finished_work_at: nil)
+    worker = Worker.new(id: 0, name: 'foo', started_work_at: @now, finished_work_at: nil)
     assert_equal '勤務中', worker.status
 
-    worker = Worker.new(id: 0, name: 'foo', started_work_at: now, finished_work_at: now+100)
+    worker = Worker.new(id: 0, name: 'foo', started_work_at: @now, finished_work_at: @now+100)
     assert_equal '退勤済', worker.status
 
-    worker = Worker.new(id: 0, name: 'foo', started_work_at: now, finished_work_at: nil, started_break_at: [now+10], finished_break_at: [])
+    worker = Worker.new(id: 0, name: 'foo', started_work_at: @now, finished_work_at: nil, started_break_at: [@now+10], finished_break_at: [])
     assert_equal '休憩中', worker.status
 
-    worker = Worker.new(id: 0, name: 'foo', started_work_at: now, finished_work_at: nil, started_break_at: [now+10, now+20], finished_break_at: [now+15])
+    worker = Worker.new(id: 0, name: 'foo', started_work_at: @now, finished_work_at: nil, started_break_at: [@now+10, @now+20], finished_break_at: [@now+15])
     assert_equal '休憩中', worker.status
   end
 
@@ -233,13 +225,12 @@ class TestWorker < Minitest::Test
     worker = Worker.new(id: 0, name: 'foo', started_work_at: started_work_at, finished_work_at: finished_work_at)
     assert_equal Timer.new(18, 22, 22), worker.working_hours
 
-    now = Time.now
-    worker = Worker.new(id: 0, name: 'foo', started_work_at: now, finished_work_at: now+100)
+    worker = Worker.new(id: 0, name: 'foo', started_work_at: @now, finished_work_at: @now+100)
     assert_equal Timer.create_from_sec(100), worker.working_hours
   end
 
   def test_breaking_hours 
-    t = Time.now - 100
+    t = @now - 100
 
     worker = Worker.new(id: 0, name: 'foo', started_work_at: t, finished_work_at: nil, started_break_at: [t, t+30], finished_break_at: [t+3])
     assert_equal Timer.create_from_sec(73), worker.breaking_hours
