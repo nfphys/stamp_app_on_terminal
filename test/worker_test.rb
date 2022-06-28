@@ -1,7 +1,6 @@
 require 'time'
 require 'minitest/autorun'
-require_relative '../lib/worker.rb'
-require_relative '../lib/timer.rb'
+require_relative '../lib/stamp/worker.rb'
 
 class TestWorker < Minitest::Test 
   def setup
@@ -218,24 +217,24 @@ class TestWorker < Minitest::Test
     started_work_at  = Time.local(2021,  5, 20,  0, 33, 45, 0)
     finished_work_at = Time.local(2021,  5, 20,  0, 33, 52, 0)
     worker = Worker.new(id: 0, name: 'foo', started_work_at: started_work_at, finished_work_at: finished_work_at)
-    assert_equal Timer.new(0, 0, 7), worker.working_hours
+    assert_equal Worker::Timer.new(0, 0, 7), worker.working_hours
 
     started_work_at  = Time.local(2021, 12,  4,  0, 33, 23, 0)
     finished_work_at = Time.local(2021, 12,  4, 18, 55, 45, 0)
     worker = Worker.new(id: 0, name: 'foo', started_work_at: started_work_at, finished_work_at: finished_work_at)
-    assert_equal Timer.new(18, 22, 22), worker.working_hours
+    assert_equal Worker::Timer.new(18, 22, 22), worker.working_hours
 
     worker = Worker.new(id: 0, name: 'foo', started_work_at: @now, finished_work_at: @now+100)
-    assert_equal Timer.create_from_sec(100), worker.working_hours
+    assert_equal Worker::Timer.create_from_sec(100), worker.working_hours
   end
 
   def test_breaking_hours 
     t = @now - 100
 
     worker = Worker.new(id: 0, name: 'foo', started_work_at: t, finished_work_at: nil, started_break_at: [t, t+30], finished_break_at: [t+3])
-    assert_equal Timer.create_from_sec(73), worker.breaking_hours
+    assert_equal Worker::Timer.create_from_sec(73), worker.breaking_hours
 
     worker = Worker.new(id: 0, name: 'foo', started_work_at: t, finished_work_at: t+100, started_break_at: [t+10, t+30], finished_break_at: [t+13, t+45])
-    assert_equal Timer.create_from_sec(18), worker.breaking_hours
+    assert_equal Worker::Timer.create_from_sec(18), worker.breaking_hours
   end
 end
