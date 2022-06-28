@@ -439,11 +439,11 @@ class Worker
   end
 
   def working_hours 
-    if started_work_at.nil?
+    unless started_work?
       return Timer.create_from_sec(0)
     end
 
-    if finished_work_at.nil?
+    unless finished_work?
       return Timer.create_from_sec(Time.now - started_work_at)
     end
 
