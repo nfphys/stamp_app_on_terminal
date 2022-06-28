@@ -1,7 +1,7 @@
 require 'mysql2'
 require 'curses'
 require 'timeout'
-require_relative './worker.rb'
+require_relative './stamp/worker.rb'
 
 client = Mysql2::Client.new(
   host: 'localhost',
