@@ -109,8 +109,6 @@ begin
           worker = worker.finish_break(client)
           log = "r: 休憩を終了しました"
 
-          # データベースに休憩終了時間を記録
-
         when 'q' # 終了
           Curses.close_screen
           exit
