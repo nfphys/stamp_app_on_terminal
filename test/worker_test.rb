@@ -34,8 +34,6 @@ class TestWorker < Minitest::Test
   end
 
   def test_check_started_work_at 
-    now = Time.now 
-
     e = assert_raises TypeError do 
       Worker.new(id: 0, name: 'foo', started_work_at: 100)
     end
