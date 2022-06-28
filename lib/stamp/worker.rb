@@ -1,7 +1,6 @@
 require 'date'
 require 'time'
 require 'mysql2'
-require_relative './timer.rb'
 
 class Worker
   DATETIME_REGEXP = /\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/
@@ -463,3 +462,4 @@ class Worker
   end
 end
 
+require_relative './timer.rb'
