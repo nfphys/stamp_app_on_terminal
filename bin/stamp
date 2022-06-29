@@ -6,4 +6,4 @@ require_relative '../lib/stamp.rb'
 print 'Enter password: '
 password = STDIN.noecho(&:gets).chomp
 
-stamp(password: password)
+Stamp::stamp(password: password)

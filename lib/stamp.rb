@@ -3,7 +3,10 @@ require 'curses'
 require 'timeout'
 require_relative './stamp/worker.rb'
 
-def stamp(host: 'localhost', username: 'root', password: )
+module Stamp
+end
+
+def Stamp::stamp(host: 'localhost', username: 'root', password: )
   client = 
     Mysql2::Client.new(
       host: host,
@@ -124,7 +127,7 @@ def stamp(host: 'localhost', username: 'root', password: )
   end
 end
 
-def create_database(host: 'localhost', username: 'root', password: )
+def Stamp::create_database(host: 'localhost', username: 'root', password: )
   client = 
     Mysql2::Client.new(
       host: host,
@@ -188,7 +191,7 @@ def create_database(host: 'localhost', username: 'root', password: )
   end
 end
 
-def delete_database(host: 'localhost', username: 'root', password: )
+def Stamp::delete_database(host: 'localhost', username: 'root', password: )
   client = 
     Mysql2::Client.new(
       host: host,
