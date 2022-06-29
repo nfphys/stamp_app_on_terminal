@@ -6,7 +6,12 @@ Gem::Specification.new do |s|
   s.description = 'Records your daily working hours.'
   s.authors     = ['Fumiya Nakamura']
   s.email       = 'nfphys@gmail.com'
-  s.files       = ['lib/stamp.rb', 'lib/stamp/worker.rb', 'lib/stamp/timer.rb']
+  s.files       = [
+    'lib/stamp.rb', 
+    'lib/stamp/create_database.rb',
+    'lib/stamp/worker.rb', 
+    'lib/stamp/timer.rb'
+  ]
   s.homepage    = 'https://github.com/nfphys/stamp_app_on_terminal'
   s.license     = 'MIT'
 end
