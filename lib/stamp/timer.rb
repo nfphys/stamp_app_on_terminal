@@ -100,40 +100,6 @@ class Worker::Timer
     self.to_sec <=> other.to_sec
   end
 
-  def +(other) # :nodoc:
-    if other.is_a?(Worker::Timer)
-      return Worker::Timer.create_from_sec(self.to_sec + other.to_sec)
-    end
-
-    if other.is_a?(Integer)
-      return Worker::Timer.create_from_sec(self.to_sec + other)
-    end
-
-    raise TypeError, 'other must be an instance of Timer or Integer.'
-  end
-
-  def -(other) # :nodoc:
-    if other.is_a?(Worker::Timer)
-      t = self.to_sec - other.to_sec
-      return Worker::Timer.create_from_sec(t.negative? ? 0 : t)
-    end
-
-    if other.is_a?(Integer)
-      t = self.to_sec - other 
-      return Worker::Timer.create_from_sec(t.negative? ? 0 : t)
-    end
-
-    raise TypeError, 'other must be an instance of Timer or Integer.'
-  end
-
-  def *(other) # :nodoc:
-    if other.is_a?(Integer)
-      return Worker::Timer.create_from_sec(self.to_sec * other)
-    end
-
-    raise TypeError, 'other must be an instance of Integer.'
-  end
-
   # 時間を文字列に変換した結果を返す。
   #
   # Example: 
