@@ -3,7 +3,22 @@
 require 'io/console'
 require_relative '../lib/stamp.rb'
 
+if ARGV.empty?
+  puts "list of stamp commands: "
+  puts "  init: Create database needed for Stamp App."
+  puts "  start: Start-up Stamp App."
+  exit
+end
+
 print 'Enter password: '
 password = STDIN.noecho(&:gets).chomp
+puts ""
 
-Stamp::stamp(password: password)
+case ARGV[0]
+when 'init'
+  Stamp::create_database(password: password)
+when 'start'
+  Stamp::stamp(password: password)
+else
+  puts "stamp: '#{ARGV[0]}' is not a stamp command."
+end
