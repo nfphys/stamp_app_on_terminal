@@ -22,7 +22,6 @@ def Stamp::stamp(host: 'localhost', username: 'root', password: )
   begin 
     win = Curses.stdscr
 
-    # 名前の入力
     win.setpos(0, 0)
     win.addstr("名前を入力してください\n")
     win.addstr("名前: ")
@@ -63,23 +62,23 @@ def Stamp::stamp(host: 'localhost', username: 'root', password: )
 
       begin 
         Timeout.timeout(0.1) do
-          if command 
+          if command # コマンドの確認
             case command
-            when 's'
+            when ?s
               win.addstr('出勤しますか？(Y/n)')
-            when 'f'
+            when ?f
               win.addstr('退勤しますか？(Y/n)')
-            when 'b'
+            when ?b
               win.addstr('休憩しますか？(Y/n)')
-            when 'r'
+            when ?r
               win.addstr('再開しますか？(Y/n)')
             end
 
             yes_or_no = win.getch 
             case yes_or_no 
-            when 'Y'
+            when ?Y
               confirmed = true
-            when 'n'
+            when ?n
               confirmed = false 
               command = nil
             end
@@ -87,7 +86,7 @@ def Stamp::stamp(host: 'localhost', username: 'root', password: )
 
           command = win.getch if command.nil?
           case command
-          when 's' # 出勤
+          when ?s # 出勤
             if worker.finished_work?
               log = "s: 既に退勤しています"
               command = nil
@@ -108,7 +107,7 @@ def Stamp::stamp(host: 'localhost', username: 'root', password: )
             confirmed = false 
             log = "s: 出勤しました"
 
-          when 'f' # 退勤
+          when ?f # 退勤
             unless worker.started_work?
               log = "f: まだ出勤していません"
               command = nil
@@ -125,7 +124,7 @@ def Stamp::stamp(host: 'localhost', username: 'root', password: )
             confirmed = false 
             log = "f: 退勤しました"
 
-          when 'b' # 休憩
+          when ?b # 休憩
             unless worker.started_work?
               log = "b: まだ出勤していません"
               command = nil
@@ -147,7 +146,7 @@ def Stamp::stamp(host: 'localhost', username: 'root', password: )
             confirmed = false 
             log = "b: 休憩を開始しました"
 
-          when 'r' # 再開
+          when ?r # 再開
             unless worker.started_work?
               log = "r: まだ出勤していません"
               command = nil
@@ -169,7 +168,7 @@ def Stamp::stamp(host: 'localhost', username: 'root', password: )
             confirmed = false 
             log = "r: 休憩を終了しました"
 
-          when 'q' # 終了
+          when ?q # 終了
             Curses.close_screen
             return 
           end
