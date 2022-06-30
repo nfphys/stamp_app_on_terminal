@@ -1,4 +1,3 @@
-require 'time'
 require 'mysql2'
 
 class Worker
