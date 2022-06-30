@@ -27,10 +27,14 @@ def Stamp::stamp(host: 'localhost', username: 'root', password: )
     win.addstr("名前を入力してください\n")
     win.addstr("名前: ")
     name = win.getstr
+    Curses.noecho
 
     worker = Worker.load_from_database(client, name)
     
     log = ""
+
+    command = nil
+    confirmed = false
 
     loop do 
       win.clear
@@ -52,68 +56,117 @@ def Stamp::stamp(host: 'localhost', username: 'root', password: )
         出勤(s) 退勤(f) 休憩(b) 再開(r) 終了(q)
 
         [LOG] #{log}
+
         TEXT
       )
       win.refresh
 
       begin 
         Timeout.timeout(0.1) do
-          command = win.getch
+          if command 
+            case command
+            when 's'
+              win.addstr('出勤しますか？(Y/n)')
+            when 'f'
+              win.addstr('退勤しますか？(Y/n)')
+            when 'b'
+              win.addstr('休憩しますか？(Y/n)')
+            when 'r'
+              win.addstr('再開しますか？(Y/n)')
+            end
+
+            yes_or_no = win.getch 
+            case yes_or_no 
+            when 'Y'
+              confirmed = true
+            when 'n'
+              confirmed = false 
+              command = nil
+            end
+          end
+
+          command = win.getch if command.nil?
           case command
           when 's' # 出勤
             if worker.finished_work?
               log = "s: 既に退勤しています"
+              command = nil
               break 
             end
             if worker.started_work?
               log = "s: 既に出勤しています"
+              command = nil
+              break 
+            end
+            break unless confirmed
+            unless confirmed 
+              command = nil
               break 
             end
             worker = worker.start_work(client)
+            command = nil
+            confirmed = false 
             log = "s: 出勤しました"
 
           when 'f' # 退勤
             unless worker.started_work?
               log = "f: まだ出勤していません"
+              command = nil
               break 
             end
             if worker.finished_work?
               log = "f: 既に退勤しています"
+              command = nil
               break 
             end
+            break unless confirmed
             worker = worker.finish_work(client)
+            command = nil
+            confirmed = false 
             log = "f: 退勤しました"
 
           when 'b' # 休憩
             unless worker.started_work?
               log = "b: まだ出勤していません"
+              command = nil
               break 
             end
             if worker.finished_work?
               log = "b: 既に退勤しています"
+              command = nil
               break
             end
             if worker.breaking?
               log = "b: 既に休憩しています"
+              command = nil
               break 
             end
+            break unless confirmed
             worker = worker.start_break(client)
+            command = nil
+            confirmed = false 
             log = "b: 休憩を開始しました"
 
           when 'r' # 再開
             unless worker.started_work?
               log = "r: まだ出勤していません"
+              command = nil
               break 
             end
             if worker.finished_work?
               log = "r: 既に退勤しています"
+              command = nil
               break
             end
             if worker.working?
               log = "r: まだ休憩していません"
+              command = nil
               break 
             end
+            break unless confirmed
             worker = worker.finish_break(client)
+            command = nil
+            confirmed = false 
             log = "r: 休憩を終了しました"
 
           when 'q' # 終了
