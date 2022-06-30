@@ -1,6 +1,5 @@
 require 'mysql2'
 require 'curses'
-require 'timeout'
 require_relative './stamp/worker.rb'
 
 module Stamp
