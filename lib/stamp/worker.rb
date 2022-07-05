@@ -320,6 +320,16 @@ class Worker
     break_data_ids = self.break_data_ids + [break_data_results.first['id']]
   end
 
+  def update_break_data(client, break_data_ids, finished_break_at)
+    client.query(
+      <<~TEXT
+      UPDATE break_data
+      SET finished_break_at = '#{finished_break_at.last.to_s.scan(DATETIME_REGEXP).first}'
+      WHERE id = '#{break_data_ids.last}'
+      TEXT
+    )
+  end
+
   def start_work(client = nil)
     return self if started_work?
 
@@ -344,22 +354,11 @@ class Worker
     
     now = Time.now 
     finished_work_at = now
-    
     update_work_data(client, work_data_id, finished_work_at) if client 
 
     if breaking?
       finished_break_at = self.finished_break_at + [now]
-
-      if client
-        client.query(
-          <<~TEXT
-          UPDATE break_data
-          SET finished_break_at = '#{finished_break_at.last.to_s.scan(DATETIME_REGEXP).first}'
-          WHERE id = '#{break_data_ids.last}'
-          TEXT
-        )
-      end
-
+      update_break_data(client, break_data_ids, finished_break_at) if client
       return Worker.new(
         id: id, 
         name: name, 
@@ -416,13 +415,7 @@ class Worker
     finished_break_at = self.finished_break_at + [Time.now]
 
     if client 
-      client.query(
-        <<~TEXT
-        UPDATE break_data
-        SET finished_break_at = '#{finished_break_at.last.to_s.scan(DATETIME_REGEXP).first}'
-        WHERE id = '#{break_data_ids.last}'
-        TEXT
-      )
+      update_break_data(client, break_data_ids, finished_break_at)
       return Worker.new(
         id: id, 
         name: name, 
