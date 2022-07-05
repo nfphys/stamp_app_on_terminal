@@ -296,6 +296,30 @@ class Worker
     )
   end
 
+  def insert_into_break_data(client, started_break_at, user_id, work_data_id)
+    client.query('USE stamp_app_on_terminal;')
+    client.query(
+      <<~TEXT
+      INSERT INTO break_data(started_break_at, user_id, work_data_id)
+      VALUES (
+        '#{started_break_at.last.to_s.scan(DATETIME_REGEXP).first}', 
+        '#{id}', 
+        '#{work_data_id}'
+      )
+      TEXT
+    )
+    break_data_results = 
+      client.query(
+        <<~TEXT
+        SELECT *
+        FROM break_data 
+        ORDER BY id DESC
+        LIMIT 1
+        TEXT
+      )
+    break_data_ids = self.break_data_ids + [break_data_results.first['id']]
+  end
+
   def start_work(client = nil)
     return self if started_work?
 
@@ -363,27 +387,7 @@ class Worker
     started_break_at = self.started_break_at + [Time.now]
 
     if client 
-      client.query('USE stamp_app_on_terminal;')
-      client.query(
-        <<~TEXT
-        INSERT INTO break_data(started_break_at, user_id, work_data_id)
-        VALUES (
-          '#{started_break_at.last.to_s.scan(DATETIME_REGEXP).first}', 
-          '#{id}', 
-          '#{work_data_id}'
-        )
-        TEXT
-      )
-      break_data_results = 
-        client.query(
-          <<~TEXT
-          SELECT *
-          FROM break_data 
-          ORDER BY id DESC
-          LIMIT 1
-          TEXT
-        )
-      break_data_ids = self.break_data_ids + [break_data_results.first['id']]
+      break_data_ids = insert_into_break_data(client, started_break_at, id, work_data_id)
       return Worker.new(
         id: id, 
         name: name, 
