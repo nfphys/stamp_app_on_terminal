@@ -262,32 +262,36 @@ class Worker
     "勤務中"
   end
 
+  def insert_into_work_data(client, started_work_at, user_id)
+    client.query('USE stamp_app_on_terminal;')
+    client.query(
+      <<~TEXT
+      INSERT INTO work_data(started_work_at, user_id) 
+      VALUES (
+        '#{started_work_at.to_s.scan(DATETIME_REGEXP).first}', 
+        '#{user_id}'
+      )
+      TEXT
+    )
+    work_data_results = 
+      client.query(
+        <<~TEXT
+        SELECT *
+        FROM work_data
+        ORDER BY id DESC
+        LIMIT 1
+        TEXT
+      )
+    work_data_id = work_data_results.first['id']
+  end
+
   def start_work(client = nil)
     return self if started_work?
 
     started_work_at = Time.now 
 
     if client
-      client.query('USE stamp_app_on_terminal;')
-      client.query(
-        <<~TEXT
-        INSERT INTO work_data(started_work_at, user_id) 
-        VALUES (
-          '#{started_work_at.to_s.scan(DATETIME_REGEXP).first}', 
-          '#{id}'
-        )
-        TEXT
-      )
-      results = 
-        client.query(
-          <<~TEXT
-          SELECT *
-          FROM work_data
-          ORDER BY id DESC
-          LIMIT 1
-          TEXT
-        )
-      work_data_id = results.first['id']
+      work_data_id = insert_into_work_data(client, started_work_at, id)
       return Worker.new(
         id: id, 
         name: name, 
