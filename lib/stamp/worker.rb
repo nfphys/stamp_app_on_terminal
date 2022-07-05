@@ -334,18 +334,14 @@ class Worker
     return self if started_work?
 
     started_work_at = Time.now 
+    work_data_id = insert_into_work_data(client, started_work_at, id) if client 
 
-    if client
-      work_data_id = insert_into_work_data(client, started_work_at, id)
-      return Worker.new(
-        id: id, 
-        name: name, 
-        work_data_id: work_data_id,
-        started_work_at: started_work_at
-      )
-    end
-
-    Worker.new(id: id, name: name, started_work_at: started_work_at)
+    return Worker.new(
+      id: id, 
+      name: name, 
+      work_data_id: work_data_id,
+      started_work_at: started_work_at
+    )
   end
 
   def finish_work(client = nil)
@@ -356,19 +352,10 @@ class Worker
     finished_work_at = now
     update_work_data(client, work_data_id, finished_work_at) if client 
 
+    finished_break_at = self.finished_break_at
     if breaking?
-      finished_break_at = self.finished_break_at + [now]
+      finished_break_at << now
       update_break_data(client, break_data_ids, finished_break_at) if client
-      return Worker.new(
-        id: id, 
-        name: name, 
-        work_data_id: work_data_id,
-        started_work_at: started_work_at, 
-        finished_work_at: finished_work_at, 
-        break_data_ids: break_data_ids, 
-        started_break_at: started_break_at, 
-        finished_break_at: finished_break_at
-      )
     end
 
     Worker.new(
@@ -376,7 +363,10 @@ class Worker
       name: name, 
       work_data_id: work_data_id,
       started_work_at: started_work_at, 
-      finished_work_at: finished_work_at
+      finished_work_at: finished_work_at, 
+      break_data_ids: break_data_ids, 
+      started_break_at: started_break_at, 
+      finished_break_at: finished_break_at
     )
   end
 
@@ -385,25 +375,16 @@ class Worker
 
     started_break_at = self.started_break_at + [Time.now]
 
-    if client 
-      break_data_ids = insert_into_break_data(client, started_break_at, id, work_data_id)
-      return Worker.new(
-        id: id, 
-        name: name, 
-        work_data_id: work_data_id,
-        started_work_at: started_work_at, 
-        finished_work_at: finished_work_at, 
-        break_data_ids: break_data_ids,
-        started_break_at: started_break_at, 
-        finished_break_at: finished_break_at
-      )
-    end
+    break_data_ids = self.break_data_ids
+    break_data_ids = insert_into_break_data(client, started_break_at, id, work_data_id) if client
 
-    Worker.new(
+    return Worker.new(
       id: id, 
       name: name, 
+      work_data_id: work_data_id,
       started_work_at: started_work_at, 
       finished_work_at: finished_work_at, 
+      break_data_ids: break_data_ids,
       started_break_at: started_break_at, 
       finished_break_at: finished_break_at
     )
@@ -413,26 +394,15 @@ class Worker
     return self unless breaking?
 
     finished_break_at = self.finished_break_at + [Time.now]
+    update_break_data(client, break_data_ids, finished_break_at) if client 
 
-    if client 
-      update_break_data(client, break_data_ids, finished_break_at)
-      return Worker.new(
-        id: id, 
-        name: name, 
-        work_data_id: work_data_id,
-        started_work_at: started_work_at, 
-        finished_work_at: finished_work_at, 
-        break_data_ids: break_data_ids,
-        started_break_at: started_break_at, 
-        finished_break_at: finished_break_at
-      )
-    end
-
-    Worker.new(
+    return Worker.new(
       id: id, 
       name: name, 
+      work_data_id: work_data_id,
       started_work_at: started_work_at, 
       finished_work_at: finished_work_at, 
+      break_data_ids: break_data_ids,
       started_break_at: started_break_at, 
       finished_break_at: finished_break_at
     )
