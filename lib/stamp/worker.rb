@@ -285,6 +285,17 @@ class Worker
     work_data_id = work_data_results.first['id']
   end
 
+  def update_work_data(client, work_data_id, finished_work_at)
+    client.query('USE stamp_app_on_terminal;')
+    client.query(
+      <<~TEXT
+      UPDATE work_data
+      SET finished_work_at = '#{finished_work_at.to_s.scan(DATETIME_REGEXP).first}'
+      WHERE id = '#{work_data_id}'
+      TEXT
+    )
+  end
+
   def start_work(client = nil)
     return self if started_work?
 
@@ -309,17 +320,8 @@ class Worker
     
     now = Time.now 
     finished_work_at = now
-
-    if client 
-      client.query('USE stamp_app_on_terminal;')
-      client.query(
-        <<~TEXT
-        UPDATE work_data
-        SET finished_work_at = '#{finished_work_at.to_s.scan(DATETIME_REGEXP).first}'
-        WHERE id = '#{work_data_id}'
-        TEXT
-      )
-    end
+    
+    update_work_data(client, work_data_id, finished_work_at) if client 
 
     if breaking?
       finished_break_at = self.finished_break_at + [now]
