@@ -303,7 +303,7 @@ class Worker
       INSERT INTO break_data(started_break_at, user_id, work_data_id)
       VALUES (
         '#{started_break_at.last.to_s.scan(DATETIME_REGEXP).first}', 
-        '#{id}', 
+        '#{user_id}', 
         '#{work_data_id}'
       )
       TEXT
@@ -321,6 +321,7 @@ class Worker
   end
 
   def update_break_data(client, break_data_ids, finished_break_at)
+    client.query('USE stamp_app_on_terminal;')
     client.query(
       <<~TEXT
       UPDATE break_data
@@ -349,6 +350,7 @@ class Worker
     return self if finished_work?
     
     now = Time.now 
+
     finished_work_at = now
     update_work_data(client, work_data_id, finished_work_at) if client 
 
@@ -409,14 +411,8 @@ class Worker
   end
 
   def working_hours 
-    unless started_work?
-      return Timer.create_from_sec(0)
-    end
-
-    unless finished_work?
-      return Timer.create_from_sec(Time.now - started_work_at)
-    end
-
+    return Timer.create_from_sec(0) unless started_work?
+    return Timer.create_from_sec(Time.now - started_work_at) unless finished_work?
     Timer.create_from_sec(finished_work_at - started_work_at)
   end
 
