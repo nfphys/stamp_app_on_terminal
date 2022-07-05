@@ -318,7 +318,7 @@ class Worker
     end
 
     if breaking?
-      finished_break_at = @finished_break_at + [now]
+      finished_break_at = self.finished_break_at + [now]
 
       if client
         client.query(
@@ -354,7 +354,7 @@ class Worker
   def start_break(client = nil)
     return self unless working?
 
-    started_break_at = @started_break_at + [Time.now]
+    started_break_at = self.started_break_at + [Time.now]
 
     if client 
       client.query('USE stamp_app_on_terminal;')
@@ -377,7 +377,7 @@ class Worker
           LIMIT 1
           TEXT
         )
-      break_data_ids = @break_data_ids + [break_data_results.first['id']]
+      break_data_ids = self.break_data_ids + [break_data_results.first['id']]
       return Worker.new(
         id: id, 
         name: name, 
@@ -403,7 +403,7 @@ class Worker
   def finish_break(client = nil)
     return self unless breaking?
 
-    finished_break_at = @finished_break_at + [Time.now]
+    finished_break_at = self.finished_break_at + [Time.now]
 
     if client 
       client.query(
