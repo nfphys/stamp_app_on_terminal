@@ -150,9 +150,8 @@ class Worker
     self.freeze
   end
 
-  def self.load_from_database(client, name)
+  def self.select_from_users(client, name)
     client.query('USE stamp_app_on_terminal;')
-
     users_results = 
       client.query(
         <<~TEXT
@@ -168,7 +167,10 @@ class Worker
     end
 
     user_id = users_results.first['id']
+  end
 
+  def self.select_from_work_data(client, user_id)
+    client.query('USE stamp_app_on_terminal;')
     work_data_results = 
       client.query(
         <<~TEXT 
@@ -181,8 +183,8 @@ class Worker
         TEXT
       )
 
-    if work_data_results.size.zero?
-      return Worker.new(id: user_id, name: name)
+    if work_data_results.size.zero? 
+      return {work_data_id: nil, started_work_at: nil, finished_work_at: nil}
     end
 
     work_data_id = work_data_results.first['id']
@@ -190,9 +192,18 @@ class Worker
     finished_work_at = work_data_results.first['finished_work_at']
 
     if finished_work_at
-      return Worker.new(id: user_id, name: name)
+      return {work_data_id: nil, started_work_at: nil, finished_work_at: nil}
     end
 
+    {
+      work_data_id: work_data_id, 
+      started_work_at: started_work_at, 
+      finished_work_at: finished_work_at
+    }
+  end
+
+  def self.select_from_break_data(client, user_id, work_data_id)
+    client.query('USE stamp_app_on_terminal;')
     break_data_results = 
       client.query(
         <<~TEXT
@@ -216,7 +227,33 @@ class Worker
       end
     end
 
-    return Worker.new(
+    {
+      break_data_ids: break_data_ids, 
+      started_break_at: started_break_at, 
+      finished_break_at: finished_break_at
+    }
+  end
+
+  def self.load_from_database(client, name)
+    client.query('USE stamp_app_on_terminal;')
+
+    user_id = Worker.select_from_users(client, name)
+
+    work_data_result = Worker.select_from_work_data(client, user_id)
+    work_data_id = work_data_result[:work_data_id]
+    started_work_at = work_data_result[:started_work_at]
+    finished_work_at = work_data_result[:finished_work_at]
+
+    if work_data_id.nil?
+      return Worker.new(id: user_id, name: name)
+    end
+
+    break_data_result = Worker.select_from_break_data(client, user_id, work_data_id)
+    break_data_ids = break_data_result[:break_data_ids]
+    started_break_at = break_data_result[:started_break_at]
+    finished_break_at = break_data_result[:finished_break_at]
+
+    Worker.new(
       id: user_id, 
       name: name, 
       work_data_id: work_data_id,
